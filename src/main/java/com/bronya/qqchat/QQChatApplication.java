@@ -1,13 +1,15 @@
 package com.bronya.qqchat;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class QqChatApplication {
+@MapperScan(basePackages = "com.bronya.qqchat.mapper")
+public class QQChatApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(QqChatApplication.class, args);
+        SpringApplication.run(QQChatApplication.class, args);
     }
 
 }
