@@ -51,6 +51,7 @@ public class SecurityConfig {
                         .requestMatchers("/user/register").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         .requestMatchers("/user/**").hasRole("USER")
+                        .requestMatchers("/chat").permitAll()
                         .anyRequest().authenticated()
         );
         httpSecurity.exceptionHandling(

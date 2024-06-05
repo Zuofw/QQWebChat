@@ -76,7 +76,7 @@ public class TokenServiceImpl implements TokenService {
      * @param token
      * @return java.lang.String
      */
-    private String getLoginKey(String token) {
+    public String getLoginKey(String token) {
         JWT jwt = JWTUtil.parseToken(token);
         return (String) jwt.getPayload(LOGIN_USER_KEY);
     }
