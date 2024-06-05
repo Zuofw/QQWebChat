@@ -37,13 +37,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("用户不存在");
         }
         Integer roleId = RoleConstants.USER;
-        return new LoginUser(
-                user.getUserName(),
-                user.getPassword(),
-                roleId,
-                null,
-                getRoleList(roleId)
-        );
+        LoginUser loginUser = new LoginUser();
+        loginUser.setUserId(String.valueOf(user.getId()));
+        loginUser.setUserPassword(user.getPassword());
+        loginUser.setUserRoleId(roleId);
+        loginUser.setAuthorities(getRoleList(roleId));
+        return loginUser;
     }
     public List<GrantedAuthority> getRoleList(int roleId) {
         Map<Integer, String> roleMap = RoleConstants.roleMap;

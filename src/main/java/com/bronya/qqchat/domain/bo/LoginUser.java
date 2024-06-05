@@ -1,6 +1,7 @@
 package com.bronya.qqchat.domain.bo;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,6 +21,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 public class LoginUser implements UserDetails {
     // 用户id
     private String userId;
