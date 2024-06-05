@@ -67,6 +67,10 @@ public class UserController {
     public Result<?> getFriendList(){
         return ResultUtils.success(userService.getFriendList());
     }
-//    @PostMapping("/updateMessage")
+//    @PostMapping("/updateMessage") //是否
+//    public Result<?> updateMessage(@RequestBody User user){
+//        userService.updateMessage(user);
+//        return ResultUtils.success("修改成功");
+//    }
 
 }

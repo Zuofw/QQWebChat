@@ -3,13 +3,20 @@ package com.bronya.qqchat.config;
 import com.bronya.qqchat.domain.bo.LoginUser;
 import com.bronya.qqchat.domain.entity.Message;
 import com.bronya.qqchat.service.MessageService;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,11 +45,45 @@ public class MyWebSocketHandler implements WebSocketHandler {
     public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
         if(message.getPayloadLength() == 0) return;
         ObjectMapper objectMapper = new ObjectMapper();
-        Message msg = objectMapper.readValue(message.getPayload().toString(), Message.class);
+        objectMapper.registerModule(new JavaTimeModule()); // 注册JavaTimeModule模块
+
+        // 将message.getPayload()转换为Map<String, Object>
+        Map<String, Object> payload = objectMapper.readValue((String) message.getPayload(), new TypeReference<Map<String, Object>>(){});
+
+        Message msg = new Message();
         msg.setReaded(0);
+        msg.setMsgId((String) payload.get("msgId"));
+        // 将payload中的content字段（一个LinkedHashMap对象）转换为JsonNode对象
+        msg.setContent(objectMapper.convertValue(payload.get("content"), JsonNode.class));
+        msg.setFrom((String) payload.get("from"));
+        msg.setTo((String) payload.get("to"));
+        msg.setDate(LocalDateTime.parse((String) payload.get("date"), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
         log.info("接收到消息：{}",msg);
+        messageService.save(msg); // 保存Message对象到数据库
+
+        // 从数据库返回的Message对象中获取id字段
+        msg.setId(messageService.getByMsgId(msg.getMsgId()));
+
         sendMessageToUser(msg.getTo(),msg);
-        messageService.save(msg);
+    }
+
+    private void sendMessageToUser(String userId, Message message) {
+        WebSocketSession session = sessions.get(userId);
+        if(session != null && session.isOpen()) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.registerModule(new JavaTimeModule()); // 注册JavaTimeModule模块
+
+                // 将整个Message对象转换为JSON字符串
+                String payload = objectMapper.writeValueAsString(message);
+                TextMessage textMessage = new TextMessage(payload);
+                log.info("发送消息：{}",textMessage.getPayload());
+                session.sendMessage(textMessage);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /*
@@ -77,17 +118,7 @@ public class MyWebSocketHandler implements WebSocketHandler {
     public boolean supportsPartialMessages() {
         return false;
     }
-    private void sendMessageToUser(String userId, Message message) {
-        WebSocketSession session = sessions.get(userId);
-        if(session != null && session.isOpen()) {
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                String payload = objectMapper.writeValueAsString(message);
-                TextMessage textMessage = new TextMessage(payload);
-                session.sendMessage(textMessage );
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
+
+
+
 }

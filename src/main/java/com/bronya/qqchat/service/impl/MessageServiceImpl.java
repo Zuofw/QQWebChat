@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bronya.qqchat.domain.entity.Message;
 import com.bronya.qqchat.mapper.MessageMapper;
 import com.bronya.qqchat.service.MessageService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 /**
@@ -17,4 +18,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> implements MessageService {
 
+    @Resource
+    private MessageMapper messageMapper;
+    @Override
+    public Long getByMsgId(String msgId) {
+        return messageMapper.getByMsgId(msgId);
+    }
 }
