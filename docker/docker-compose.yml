@@ -2,6 +2,7 @@ version: '3' # docker-compose版本
 services: # 服务列表
   redis:
     image: redis:latest
+    command: redis-server --requirepass root123
     ports:
       - "6379:6379"
   mysql:
@@ -11,4 +12,4 @@ services: # 服务列表
     environment:
       MYSQL_ROOT_PASSWORD: root123
 #    volumes:
-#      - ./sql/init.sql
+#      - ./sql/QQChat.sql

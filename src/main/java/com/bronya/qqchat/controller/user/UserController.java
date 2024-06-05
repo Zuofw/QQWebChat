@@ -1,12 +1,9 @@
 package com.bronya.qqchat.controller.user;
 
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.bronya.qqchat.domain.dto.UserInfoRequest;
 import com.bronya.qqchat.domain.dto.UserLoginRequest;
 import com.bronya.qqchat.domain.dto.UserRegisterRequest;
 import com.bronya.qqchat.domain.entity.User;
 import com.bronya.qqchat.domain.vo.Result;
-import com.bronya.qqchat.domain.vo.UserInfo;
 import com.bronya.qqchat.service.LoginService;
 import com.bronya.qqchat.service.UserService;
 import com.bronya.qqchat.util.ResultUtils;
@@ -14,7 +11,6 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
@@ -43,10 +39,14 @@ public class UserController {
         loginService.userLogout(request);
         return ResultUtils.success("退出成功");
     }
-    @PostMapping("/update") //只改个人信息
-    public Result<?> update(@RequestBody UserInfoRequest userInfoRequest){
-        userService.updateUser(userInfoRequest);
-        return ResultUtils.success("修改成功");
+//    @PostMapping("/update") //只改个人信息
+//    public Result<?> update(@RequestBody UserInfoRequest userInfoRequest){
+//        userService.updateUser(userInfoRequest);
+//        return ResultUtils.success("修改成功");
+//    }
+    @GetMapping("/getUserByName")
+    public Result<?> getUserByName(String name){
+        return ResultUtils.success(userService.getUserByName(name));
     }
 //
 //    @PostMapping("/updateHeadImage")
@@ -63,5 +63,10 @@ public class UserController {
 //    public Result<String> getUserHeadImage(HttpServletRequest request){
 //        return ResultUtils.success(loginService.getUserHeadImage(request));
 //    }
+    @GetMapping("/getFriendList")
+    public Result<?> getFriendList(){
+        return ResultUtils.success(userService.getFriendList());
+    }
+//    @PostMapping("/updateMessage")
 
 }

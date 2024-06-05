@@ -1,12 +1,16 @@
 package com.bronya.qqchat.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bronya.qqchat.constant.ImageConstants;
 import com.bronya.qqchat.domain.bo.LoginUser;
 import com.bronya.qqchat.domain.dto.UserInfoRequest;
+import com.bronya.qqchat.domain.entity.Friend;
 import com.bronya.qqchat.domain.entity.User;
+import com.bronya.qqchat.domain.vo.FriendVO;
 import com.bronya.qqchat.domain.vo.UserInfo;
+import com.bronya.qqchat.mapper.FriendMapper;
 import com.bronya.qqchat.mapper.UserMapper;
 import com.bronya.qqchat.service.TokenService;
 import com.bronya.qqchat.service.UserService;
@@ -23,7 +27,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -36,6 +42,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     @Resource
     private TokenService tokenService;
 
+    @Resource
+    private FriendMapper friendMapper;
 
     @Override
     public void updateUser(UserInfoRequest userInfoRequest) {
@@ -90,6 +98,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
                 .headImage(headImageContent)
                 .build();
     }
+
+    @Override
+    public String getUserByName(String name) {
+        return userMapper.selectOne(new QueryWrapper<User>().eq("username", name)).getPhone();
+    }
+
+    @Override
+    public List<FriendVO> getFriendList() {
+        String userId = SecurityUtils.getUserId();
+        //通过userId查询好友列表
+
+        List<Friend> friends = friendMapper.selectList(new QueryWrapper<Friend>().eq("user_id", userId));
+        //查询出好友的名字
+
+        List<FriendVO> collect = friends.stream()
+                .map(friend -> {
+                    User user = userMapper.selectById(friend.getFriendId());
+                    return FriendVO.builder()
+                            .friendId(user.getId().toString())
+                            .friendName(user.getUserName())
+                            .build();
+                }).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        System.out.println(collect);
+        return collect;
+    }
+
+
+
     private String getImageAsBase64String(String imagePath) {
         try {
             byte[] imageBytes = Files.readAllBytes(Paths.get(imagePath));

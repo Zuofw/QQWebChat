@@ -1,11 +1,13 @@
 package com.bronya.qqchat.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.util.Date;
 
 /**
@@ -20,14 +22,21 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@TableName(value = "message")
 public class Message implements Serializable {
+    @TableId(value = "id",type = IdType.AUTO)
+    public Long id;
+    @TableField(value = "from_user_id")
     public String from;
-    public String fromName;
+    @TableField(value = "to_user_id")
     public String to;
-    public String text;
+    @TableField(value = "content")
+    public String content;
+    public Integer readed;
     public Date date;
-    //图片
-    public String image;
-    //表情
-    public String emoji;
+
+    @TableField(value = "update_time",fill = FieldFill.INSERT_UPDATE)
+    public Date createTime;
+    @TableField(value = "update_time",fill = FieldFill.INSERT_UPDATE)
+    public Date updateTime;
 }

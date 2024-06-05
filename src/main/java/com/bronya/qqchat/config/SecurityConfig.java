@@ -50,8 +50,9 @@ public class SecurityConfig {
                         .requestMatchers("/user/login").permitAll() // 允许登录和注册
                         .requestMatchers("/user/register").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                        .requestMatchers("/user/**").hasRole("USER")
+//                        .requestMatchers("/user/**").hasRole("USER")
                         .requestMatchers("/chat").permitAll()
+                        .requestMatchers("user/getUserByName").permitAll()
                         .anyRequest().authenticated()
         );
         httpSecurity.exceptionHandling(

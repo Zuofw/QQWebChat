@@ -73,7 +73,7 @@ public class LoginServiceImpl implements LoginService {
                 .phone(phone)
                 .userName(RegisterRequest.getUsername())
                 .password(SecurityUtils.encodePassword(RegisterRequest.getPassword()))
-                .headImage(resourcesPath+ImageConstants.HEAD_IMAGE_PATH + "/default.png")
+                .headImage("1")
                 .build();
         userService.save(user);
     }
