@@ -21,7 +21,7 @@ public interface UserService extends IService<User> {
 
     UserInfo getUserInfo(HttpServletRequest request);
 
-    String getUserByName(String name);
+    User getUserByName(String name);
 
     List<FriendVO> getFriendList();
 

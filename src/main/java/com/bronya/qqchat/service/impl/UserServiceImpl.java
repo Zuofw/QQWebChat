@@ -98,8 +98,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     }
 
     @Override
-    public String getUserByName(String name) {
-        return userMapper.selectOne(new QueryWrapper<User>().eq("username", name)).getPhone();
+    public User getUserByName(String name) {
+        return userMapper.selectOne(new QueryWrapper<User>().eq("username", name));
     }
 
     @Override
