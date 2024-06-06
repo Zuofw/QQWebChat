@@ -1,5 +1,5 @@
-version: '3' # docker-compose版本
-services: # 服务列表
+version: '3'
+services:
   redis:
     image: redis:latest
     command: redis-server --requirepass root123
@@ -11,5 +11,15 @@ services: # 服务列表
       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root123
-#    volumes:
-#      - ./sql/QQChat.sql
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d
+  qqchat:
+    image: openjdk:latest
+    volumes:
+      - ./QQChat-0.0.1-SNAPSHOT.jar:/QQChat-0.0.1-SNAPSHOT.jar
+    command: java -jar /QQChat-0.0.1-SNAPSHOT.jar
+    ports:
+      - "8099:8099"
+    depends_on:
+      - mysql
+      - redis

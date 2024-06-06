@@ -26,7 +26,7 @@ public class Friend {
     private String userId;
     @TableField(value = "friend_id")
     private String friendId;
-    @TableField(value = "create_time",fill = FieldFill.INSERT_UPDATE)
+    @TableField(value = "create_time",fill = FieldFill.INSERT)
     private String createTime;
     @TableField(value = "update_time",fill = FieldFill.INSERT_UPDATE)
     private String updateTime;

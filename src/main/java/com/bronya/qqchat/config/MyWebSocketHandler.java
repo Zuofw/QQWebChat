@@ -52,11 +52,11 @@ public class MyWebSocketHandler implements WebSocketHandler {
 
         Message msg = new Message();
         msg.setReaded(0);
-        msg.setMsgId((String) payload.get("msgId"));
         // 将payload中的content字段（一个LinkedHashMap对象）转换为JsonNode对象
         msg.setContent(objectMapper.convertValue(payload.get("content"), JsonNode.class));
         msg.setImage((String) payload.get("image"));
-        msg.setFrom((String) payload.get("from"));
+//        msg.setFrom((String) payload.get("from"));
+        msg.setFrom(((LoginUser) session.getAttributes().get("loginUser")).getUserId());
         msg.setTo((String) payload.get("to"));
         msg.setDate(LocalDateTime.parse((String) payload.get("date"), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
@@ -64,7 +64,6 @@ public class MyWebSocketHandler implements WebSocketHandler {
         messageService.save(msg); // 保存Message对象到数据库
 
         // 从数据库返回的Message对象中获取id字段
-        msg.setId(messageService.getByMsgId(msg.getMsgId()));
 
         sendMessageToUser(msg.getTo(),msg);
     }

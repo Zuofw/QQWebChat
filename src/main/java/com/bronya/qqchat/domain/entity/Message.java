@@ -24,8 +24,7 @@ import java.util.Map;
 public class Message implements Serializable {
     @TableId(value = "id",type = IdType.AUTO)
     public Long id;
-    @TableField(value = "msg_id")
-    public String msgId;
+
     @TableField(value = "from_user_id")
     public String from;
     @TableField(value = "to_user_id")

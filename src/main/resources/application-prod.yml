@@ -1,0 +1,29 @@
+server:
+  port: 8090
+spring:
+  datasource:
+    dynamic:
+      primary: QQChat
+      datasource:
+        QQChat:
+          url: jdbc:mysql://47.121.140.11:3306/qq_chat
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          username: root
+          password: root123
+
+  data:
+    redis:
+      database: 1
+      host: 47.121.140.11
+      port: 6379
+      password: root123
+logging:
+  pattern:
+    dateformat: yyyy-MM-dd HH:mm:ss
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 控制台输出日志
+  type-handlers-package: com.bronya.qqchat.config
+jwt:
+  secret: QQChatQQChatQQChat
+mybatis:

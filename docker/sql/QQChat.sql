@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS message(
     id INT PRIMARY KEY AUTO_INCREMENT COMMENT '消息id',
     from_user_id INT NOT NULL COMMENT '发送者id',
     to_user_id INT NOT NULL COMMENT '接收者id',
-    msg_id VARCHAR(100) NOT NULL COMMENT '消息id', # 二者字符转相加再加上自增序号
     content TEXT NOT NULL COMMENT '消息内容',
     image TEXT COMMENT '图片', #使用Base64编码
     readed INT NOT NULL DEFAULT 0 COMMENT '是否已读',

@@ -27,10 +27,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -133,9 +131,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     }
 
     @Override
-    public void updateMessageReadedByMsgId(String msgId) {
-        userMapper.updateMessageReadedByMsgId(msgId);
+    public void updateMessageReadedByMsgId(Message message) {
+        String fromUserId = SecurityUtils.getUserId();
+        String toUserId = message.getTo();
+        LocalDateTime date = message.getDate();
+        log.info("fromUserId: {}, toUserId: {}, date: {}", fromUserId, toUserId, date);
+        // 把所有这个时间之前的消息都设置为已读
+        userMapper.updateMessageReadedByMsgId(fromUserId, toUserId, date);
     }
+
+
 
 
     private String getImageAsBase64String(String imagePath) {

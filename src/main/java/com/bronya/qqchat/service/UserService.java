@@ -27,5 +27,7 @@ public interface UserService extends IService<User> {
 
     Page<Message> getMessageById(String toUserId);
 
-    void updateMessageReadedByMsgId(String  msgId);
+    void updateMessageReadedByMsgId(Message message);
+
+
 }

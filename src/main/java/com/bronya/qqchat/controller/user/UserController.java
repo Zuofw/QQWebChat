@@ -2,8 +2,10 @@ package com.bronya.qqchat.controller.user;
 
 import com.bronya.qqchat.domain.dto.UserLoginRequest;
 import com.bronya.qqchat.domain.dto.UserRegisterRequest;
+import com.bronya.qqchat.domain.entity.Message;
 import com.bronya.qqchat.domain.entity.User;
 import com.bronya.qqchat.domain.vo.Result;
+import com.bronya.qqchat.service.FriendService;
 import com.bronya.qqchat.service.LoginService;
 import com.bronya.qqchat.service.UserService;
 import com.bronya.qqchat.util.ResultUtils;
@@ -20,6 +22,8 @@ import java.io.IOException;
 @RequestMapping("/user")
 public class UserController {
 
+    @Resource
+    private FriendService friendService;
     @Resource
     private LoginService loginService;
     @Resource
@@ -76,10 +80,15 @@ public class UserController {
     public Result<?> getMessageById(@RequestParam String friendId){
         return ResultUtils.success(userService.getMessageById(friendId));
     }
-    @PostMapping("/updateMessageReadedByMsgId")
-    public Result<?> updateMessageReadedByMsgId(@RequestParam String msgId){
-        userService.updateMessageReadedByMsgId(msgId);
+    @PostMapping("/updateMessageReadedByDate")
+    public Result<?> updateMessageReadedByMsgDate(@RequestBody Message message){
+        userService.updateMessageReadedByMsgId(message);
         return ResultUtils.success("修改成功");
+    }
+    @PostMapping("/addFriend")
+    public Result<?> addFriend(@RequestParam String phone){
+        friendService.addFriend(phone);
+        return ResultUtils.success("添加成功");
     }
 
 }
