@@ -32,6 +32,8 @@ public class Message implements Serializable {
     public String to;
     @TableField(value = "content")
     public JsonNode content;
+    @TableField(value = "image")
+    public String image;
     @TableField(value = "readed")
     public Integer readed;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

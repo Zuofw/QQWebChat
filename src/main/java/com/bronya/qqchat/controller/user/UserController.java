@@ -72,5 +72,14 @@ public class UserController {
 //        userService.updateMessage(user);
 //        return ResultUtils.success("修改成功");
 //    }
+    @PostMapping("/getMessageByFriendId")
+    public Result<?> getMessageById(@RequestParam String friendId){
+        return ResultUtils.success(userService.getMessageById(friendId));
+    }
+    @PostMapping("/updateMessageReadedByMsgId")
+    public Result<?> updateMessageReadedByMsgId(@RequestParam String msgId){
+        userService.updateMessageReadedByMsgId(msgId);
+        return ResultUtils.success("修改成功");
+    }
 
 }

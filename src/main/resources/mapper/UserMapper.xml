@@ -5,4 +5,9 @@
 <mapper namespace="com.bronya.qqchat.mapper.UserMapper">
 
 
+    <select id="getMessageById" resultType="com.bronya.qqchat.domain.entity.Message">
+        select * from message where from_user_id = #{fromUserId} and to_user_id = #{toUserId}
+        order by create_time desc
+
+    </select>
 </mapper>

@@ -55,6 +55,7 @@ public class MyWebSocketHandler implements WebSocketHandler {
         msg.setMsgId((String) payload.get("msgId"));
         // 将payload中的content字段（一个LinkedHashMap对象）转换为JsonNode对象
         msg.setContent(objectMapper.convertValue(payload.get("content"), JsonNode.class));
+        msg.setImage((String) payload.get("image"));
         msg.setFrom((String) payload.get("from"));
         msg.setTo((String) payload.get("to"));
         msg.setDate(LocalDateTime.parse((String) payload.get("date"), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));

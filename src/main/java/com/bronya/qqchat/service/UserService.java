@@ -1,8 +1,10 @@
 package com.bronya.qqchat.service;
 
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.bronya.qqchat.domain.dto.UserInfoRequest;
+import com.bronya.qqchat.domain.entity.Message;
 import com.bronya.qqchat.domain.entity.User;
 import com.bronya.qqchat.domain.vo.FriendVO;
 import com.bronya.qqchat.domain.vo.UserInfo;
@@ -22,4 +24,8 @@ public interface UserService extends IService<User> {
     String getUserByName(String name);
 
     List<FriendVO> getFriendList();
+
+    Page<Message> getMessageById(String toUserId);
+
+    void updateMessageReadedByMsgId(String  msgId);
 }

@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS message(
     to_user_id INT NOT NULL COMMENT '接收者id',
     msg_id VARCHAR(100) NOT NULL COMMENT '消息id', # 二者字符转相加再加上自增序号
     content TEXT NOT NULL COMMENT '消息内容',
+    image TEXT COMMENT '图片', #使用Base64编码
     readed INT NOT NULL DEFAULT 0 COMMENT '是否已读',
     date DATETIME NOT NULL COMMENT '发送时间',
     create_time DATETIME NOT NULL COMMENT '创建时间',

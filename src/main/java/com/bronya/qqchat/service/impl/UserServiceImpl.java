@@ -1,12 +1,13 @@
 package com.bronya.qqchat.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bronya.qqchat.constant.ImageConstants;
 import com.bronya.qqchat.domain.bo.LoginUser;
 import com.bronya.qqchat.domain.dto.UserInfoRequest;
 import com.bronya.qqchat.domain.entity.Friend;
+import com.bronya.qqchat.domain.entity.Message;
 import com.bronya.qqchat.domain.entity.User;
 import com.bronya.qqchat.domain.vo.FriendVO;
 import com.bronya.qqchat.domain.vo.UserInfo;
@@ -19,7 +20,6 @@ import com.bronya.qqchat.util.SecurityUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -124,6 +124,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         return collect;
     }
 
+    @Override
+    public Page<Message> getMessageById(String toUserId) {
+        String  fromUserId = SecurityUtils.getUserId();
+        //获取按时间顺序的后十条消息
+        Page<Message> page = new Page<>(1, 10);
+        return userMapper.getMessageById(page, fromUserId, toUserId);
+    }
+
+    @Override
+    public void updateMessageReadedByMsgId(String msgId) {
+        userMapper.updateMessageReadedByMsgId(msgId);
+    }
 
 
     private String getImageAsBase64String(String imagePath) {
