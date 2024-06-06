@@ -19,7 +19,7 @@ services:
       - ./QQChat-0.0.1-SNAPSHOT.jar:/QQChat-0.0.1-SNAPSHOT.jar
     command: java -jar /QQChat-0.0.1-SNAPSHOT.jar
     ports:
-      - "8099:8099"
+      - "8090:8090"
     depends_on:
       - mysql
       - redis
