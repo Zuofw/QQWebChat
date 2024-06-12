@@ -7,6 +7,8 @@ import com.bronya.qqchat.service.MessageService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * 〈一句话功能简述〉<br>
  * 〈〉
@@ -21,7 +23,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     @Resource
     private MessageMapper messageMapper;
     @Override
-    public Long getByMsgId(String msgId) {
-        return messageMapper.getByMsgId(msgId);
+    public List<Message> getByUserId(String userId) {
+        return messageMapper.getByUserId(userId);
     }
 }

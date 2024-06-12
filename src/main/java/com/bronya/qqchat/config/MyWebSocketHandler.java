@@ -2,11 +2,14 @@ package com.bronya.qqchat.config;
 
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTUtil;
+import cn.hutool.log.Log;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bronya.qqchat.constant.RedisConstants;
 import com.bronya.qqchat.domain.bo.LoginUser;
 import com.bronya.qqchat.domain.entity.Message;
 import com.bronya.qqchat.service.MessageService;
 import com.bronya.qqchat.service.TokenService;
+import com.bronya.qqchat.service.UserService;
 import com.bronya.qqchat.util.RedisCache;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -24,17 +27,25 @@ import org.springframework.web.socket.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
 public class MyWebSocketHandler implements WebSocketHandler {
     static final Map<String,WebSocketSession> sessions = new ConcurrentHashMap<>();
+
+    //定时任务
     @Resource
     private TokenService tokenService;
     @Value("${jwt.secret}")
     private String secret;
+    @Resource
+    private UserService userService;
     @Resource
     private RedisCache redisCache;
     private final static String LOGIN_USER_KEY = "login_user_key";
@@ -42,10 +53,58 @@ public class MyWebSocketHandler implements WebSocketHandler {
     private MessageService messageService;
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-//        LoginUser loginUser = (LoginUser) session.getAttributes().get("loginUser");
-//        log.info("用户{}连接",loginUser.getUserId());
-//        sessions.put(loginUser.getUserId(),session);
-        log.info("用户连接");
+        // 其他代码...
+        log.info("连接成功");
+
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+        // 启动一个定时任务，每隔10秒查询一次Redis中的键
+        executorService.scheduleAtFixedRate(() -> {
+            log.info("开始执行定时任务");
+            LoginUser loginUser = (LoginUser) session.getAttributes().get("loginUser");
+            if(loginUser != null) {
+                String userId = loginUser.getUserId();
+                String key = RedisConstants.USER_ACTIVE + userId; // 需要查询的键
+                Object value = redisCache.getCache(key);
+                // 处理查询到的值...
+                if(value == null) {
+                    log.info("用户{}已经断开连接",value);
+                    WebSocketSession webSocketSession = sessions.get(userId);
+                    if(webSocketSession != null && webSocketSession.isOpen()) {
+                        try {
+//                            sessions.remove(userId);
+                            webSocketSession.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    log.info("定时任务执行完毕");
+                } else {
+
+                }
+            }
+
+        }, 0, 30, TimeUnit.SECONDS); // 10秒后开始执行，每隔10秒执行一次
+
+        executorService.scheduleAtFixedRate(()->{
+            LoginUser loginUser = (LoginUser) session.getAttributes().get("loginUser");
+            if(loginUser == null) {
+                log.info("还未初始化用户信息");
+            } else {
+                log.info("检测是否有新消息");
+                String userId = loginUser.getUserId();
+                List<Message> byUserId = messageService.getByUserId(userId);
+                for (Message message : byUserId) {
+                    message.setIsSend(1);
+                    sendMessageToUser(userId,message);
+                    messageService.updateById(message);
+                }
+                log.info("发送未读消息完成");
+            }
+
+        } ,0, 5, TimeUnit.SECONDS);
+
+
+        session.getAttributes().putIfAbsent("executorService",executorService);
     }
 
     /*
@@ -62,37 +121,62 @@ public class MyWebSocketHandler implements WebSocketHandler {
         objectMapper.registerModule(new JavaTimeModule()); // 注册JavaTimeModule模块
 
         // 将message.getPayload()转换为Map<String, Object>
+        log.info("message.getPayload():{}",message.getPayload());
         Map<String, Object> payload = objectMapper.readValue((String) message.getPayload(), new TypeReference<Map<String, Object>>(){});
 
+        log.info("payload:{}",payload);
         String token = (String) payload.get("token");
-        JWT jwt = JWTUtil.parseToken(token);
-        String uuid = (String) jwt.getPayload(LOGIN_USER_KEY);
-        LoginUser loginUser = redisCache.getCache(RedisConstants.USER_LOGIN_KEY + uuid);
+        String ping = (String) payload.get("type");
+        log.info("这是token:{}",token);
 
-        session.getAttributes().putIfAbsent("loginUser",loginUser);
-        sessions.putIfAbsent(loginUser.getUserId(),session);
-        Message msg = new Message();
-        msg.setReaded(0);
-        msg.setToken(token);
-        // 将payload中的content字段（一个LinkedHashMap对象）转换为JsonNode对象
-        msg.setContent(objectMapper.convertValue(payload.get("content"), JsonNode.class));
-        msg.setImage((String) payload.get("image"));
+        if(ping != null) {
+            log.info("这是type:{}",ping);
+            LoginUser loginUser = (LoginUser)session.getAttributes().get("loginUser");
+            String userId = loginUser.getUserId();
+            redisCache.setExpireCache(RedisConstants.USER_ACTIVE + userId, userId, 60, TimeUnit.SECONDS); // 10秒后删除
+        } else {
+            if(token != null) {
+                JWT jwt = JWTUtil.parseToken(token);
+                String uuid = (String) jwt.getPayload(LOGIN_USER_KEY);
+                LoginUser loginUser = redisCache.getCache(RedisConstants.USER_LOGIN_KEY + uuid);
+                session.getAttributes().putIfAbsent("loginUser",loginUser);
+                sessions.putIfAbsent(loginUser.getUserId(),session);
+
+            } else {
+
+                Message msg = new Message();
+                msg.setReaded(0);
+                msg.setIsSend(0);
+//            msg.setToken(token);
+                // 将payload中的content字段（一个LinkedHashMap对象）转换为JsonNode对象
+                msg.setContent(objectMapper.convertValue(payload.get("content"), JsonNode.class));
+                msg.setImage((String) payload.get("image"));
 //        msg.setFrom((String) payload.get("from"));
-        msg.setFrom(((LoginUser) session.getAttributes().get("loginUser")).getUserId());
-        msg.setTo((String) payload.get("to"));
-        msg.setDate(LocalDateTime.parse((String) payload.get("date"), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                msg.setFrom(((LoginUser) session.getAttributes().get("loginUser")).getUserId());
+                msg.setTo((String) payload.get("to"));
+                msg.setDate(LocalDateTime.parse((String) payload.get("date"), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-        log.info("接收到消息：{}",msg);
-        messageService.save(msg); // 保存Message对象到数据库
+                log.info("接收到消息：{}",msg);
+                if( sendMessageToUser(msg.getTo(),msg)) {
+                    msg.setIsSend(1);
+                }
+                messageService.save(msg); // 保存Message对象到数据库
 
 
 
-        // 从数据库返回的Message对象中获取id字段
+                // 从数据库返回的Message对象中获取id字段
 
-        sendMessageToUser(msg.getTo(),msg);
+
+            }
+        }
+
+
+
+
+
     }
 
-    private void sendMessageToUser(String userId, Message message) {
+    private boolean sendMessageToUser(String userId, Message message) {
         WebSocketSession session = sessions.get(userId);
         if(session != null && session.isOpen()) {
             try {
@@ -105,10 +189,12 @@ public class MyWebSocketHandler implements WebSocketHandler {
                 TextMessage textMessage = new TextMessage(payload);
                 log.info("发送消息：{}",textMessage.getPayload());
                 session.sendMessage(textMessage);
+                return true;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        return false;
     }
 
     /*
@@ -132,13 +218,17 @@ public class MyWebSocketHandler implements WebSocketHandler {
      * @param closeStatus
      * @throws Exception
      */
+
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-        LoginUser loginUser = (LoginUser) session.getAttributes().get("loginUser");
-        log.info("用户{}断开连接",loginUser.getUserId());
-        sessions.remove(loginUser.getUserId());
-    }
+        // 其他代码...
 
+        // 在连接关闭时停止定时任务
+        ScheduledExecutorService executorService = (ScheduledExecutorService) session.getAttributes().get("executorService");
+        if (executorService != null) {
+            executorService.shutdown();
+        }
+    }
     @Override
     public boolean supportsPartialMessages() {
         return false;

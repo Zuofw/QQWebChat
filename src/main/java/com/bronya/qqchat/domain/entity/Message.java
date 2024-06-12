@@ -37,13 +37,16 @@ public class Message implements Serializable {
     public String image;
     @TableField(value = "readed")
     public Integer readed;
+    @TableField(value = "is_send",fill = FieldFill.INSERT)//插入时自动填充为0
+    //默认为0,自动填充为0
+    public Integer isSend;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime date;
 
 //    @Transient
-    @TableField(exist = false)
-    @JsonIgnore
-    private String token;
+//    @TableField(exist = false)
+//    @JsonIgnore
+//    private String token;
     @TableField(value = "create_time",fill = FieldFill.INSERT)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime createTime;

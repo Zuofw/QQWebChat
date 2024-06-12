@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS message(
     content TEXT NOT NULL COMMENT '消息内容',
     image TEXT COMMENT '图片', #使用Base64编码
     readed INT NOT NULL DEFAULT 0 COMMENT '是否已读',
+    is_send INT NOT NULL DEFAULT 0 COMMENT '是否发送成功',
     date DATETIME NOT NULL COMMENT '发送时间',
     create_time DATETIME NOT NULL COMMENT '创建时间',
     update_time DATETIME NOT NULL COMMENT '更新时间'

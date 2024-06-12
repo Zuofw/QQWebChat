@@ -24,6 +24,8 @@ public class RedisCache {
         redisTemplate.opsForValue().set(key, value);
     }
     public <T> void setExpireCache (String key, T value, int timeout, TimeUnit timeUnit) {
+//        redisTemplate.opsForValue().setIfAbsent(key, value, timeout, timeUnit);//设置过期时间,如果key存在则不设置
+        //设置过期时间，如果key存在就更新过期时间
         redisTemplate.opsForValue().set(key, value, timeout, timeUnit);
     }
     @SuppressWarnings("unchecked")

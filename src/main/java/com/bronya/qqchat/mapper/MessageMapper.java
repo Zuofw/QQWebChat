@@ -5,8 +5,11 @@ import com.bronya.qqchat.domain.entity.Message;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 @Mapper
 public interface MessageMapper extends BaseMapper<Message> {
-    @Select("select id from message where msg_id = #{msgId}")
-    Long getByMsgId(String msgId);
+    @Select("select * from message where to_user_id = #{userId} and readed = 0 and message.is_send = 0 order by create_time desc")
+    List<Message> getByUserId(String userId);
+
 }
