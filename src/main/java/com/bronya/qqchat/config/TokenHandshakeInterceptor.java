@@ -30,7 +30,7 @@ public class TokenHandshakeInterceptor implements HandshakeInterceptor {
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         // 从请求头中获取Token
-        String token = request.getHeaders().getFirst("Authorization");
+        String token = request.getHeaders().getFirst("Sec-WebSocket-Protocol");
         JWT jwt = JWTUtil.parseToken(token);
         String uuid = (String) jwt.getPayload(LOGIN_USER_KEY);
         LoginUser loginUser = redisCache.getCache(RedisConstants.USER_LOGIN_KEY + uuid);
@@ -44,6 +44,10 @@ public class TokenHandshakeInterceptor implements HandshakeInterceptor {
 
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Exception exception) {
-
+        if (exception != null) {
+            log.error("WebSocket connection closed with exception", exception);
+        } else {
+            log.info("WebSocket connection closed without exception");
+        }
     }
 }

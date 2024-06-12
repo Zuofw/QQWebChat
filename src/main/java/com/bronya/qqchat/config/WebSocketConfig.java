@@ -10,12 +10,12 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
     @Resource
-    MyWebSocketHandler handler;
-    @Resource
-    TokenHandshakeInterceptor tokenHandshakeInterceptor;
+    private MyWebSocketHandler handler;
+//    @Resource
+//    TokenHandshakeInterceptor tokenHandshakeInterceptor;
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(handler, "/chat")
-                .addInterceptors(tokenHandshakeInterceptor);
+        registry.addHandler(handler, "/chat");
+//                .addInterceptors(tokenHandshakeInterceptor);
     }
 }

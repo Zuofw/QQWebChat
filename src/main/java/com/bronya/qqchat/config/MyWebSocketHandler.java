@@ -1,8 +1,13 @@
 package com.bronya.qqchat.config;
 
+import cn.hutool.jwt.JWT;
+import cn.hutool.jwt.JWTUtil;
+import com.bronya.qqchat.constant.RedisConstants;
 import com.bronya.qqchat.domain.bo.LoginUser;
 import com.bronya.qqchat.domain.entity.Message;
 import com.bronya.qqchat.service.MessageService;
+import com.bronya.qqchat.service.TokenService;
+import com.bronya.qqchat.util.RedisCache;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -11,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.*;
@@ -26,12 +32,20 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MyWebSocketHandler implements WebSocketHandler {
     static final Map<String,WebSocketSession> sessions = new ConcurrentHashMap<>();
     @Resource
+    private TokenService tokenService;
+    @Value("${jwt.secret}")
+    private String secret;
+    @Resource
+    private RedisCache redisCache;
+    private final static String LOGIN_USER_KEY = "login_user_key";
+    @Resource
     private MessageService messageService;
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        LoginUser loginUser = (LoginUser) session.getAttributes().get("loginUser");
-        log.info("用户{}连接",loginUser.getUserId());
-        sessions.put(loginUser.getUserId(),session);
+//        LoginUser loginUser = (LoginUser) session.getAttributes().get("loginUser");
+//        log.info("用户{}连接",loginUser.getUserId());
+//        sessions.put(loginUser.getUserId(),session);
+        log.info("用户连接");
     }
 
     /*
@@ -50,8 +64,16 @@ public class MyWebSocketHandler implements WebSocketHandler {
         // 将message.getPayload()转换为Map<String, Object>
         Map<String, Object> payload = objectMapper.readValue((String) message.getPayload(), new TypeReference<Map<String, Object>>(){});
 
+        String token = (String) payload.get("token");
+        JWT jwt = JWTUtil.parseToken(token);
+        String uuid = (String) jwt.getPayload(LOGIN_USER_KEY);
+        LoginUser loginUser = redisCache.getCache(RedisConstants.USER_LOGIN_KEY + uuid);
+
+        session.getAttributes().putIfAbsent("loginUser",loginUser);
+        sessions.putIfAbsent(loginUser.getUserId(),session);
         Message msg = new Message();
         msg.setReaded(0);
+        msg.setToken(token);
         // 将payload中的content字段（一个LinkedHashMap对象）转换为JsonNode对象
         msg.setContent(objectMapper.convertValue(payload.get("content"), JsonNode.class));
         msg.setImage((String) payload.get("image"));
@@ -62,6 +84,8 @@ public class MyWebSocketHandler implements WebSocketHandler {
 
         log.info("接收到消息：{}",msg);
         messageService.save(msg); // 保存Message对象到数据库
+
+
 
         // 从数据库返回的Message对象中获取id字段
 
@@ -74,7 +98,8 @@ public class MyWebSocketHandler implements WebSocketHandler {
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.registerModule(new JavaTimeModule()); // 注册JavaTimeModule模块
-
+                //删除 token 字段
+//                message.setToken(null);
                 // 将整个Message对象转换为JSON字符串
                 String payload = objectMapper.writeValueAsString(message);
                 TextMessage textMessage = new TextMessage(payload);
