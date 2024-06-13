@@ -1,15 +1,21 @@
 package com.bronya.qqchat.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bronya.qqchat.domain.entity.Message;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
 public interface MessageMapper extends BaseMapper<Message> {
-    @Select("select * from message where to_user_id = #{userId} and readed = 0 and message.is_send = 0 order by create_time desc")
-    List<Message> getByUserId(String userId);
+    List<Message> getByTo(String to);
 
+    Page<Message> getMessageById(Page<Message> page, String fromUserId, String toUserId);
+
+
+    @Update("update message set readed = 1 where from_user_id = #{fromUserId} and to_user_id = #{toUserId} and readed = 0 and date < #{date}")
+    void updateMessageReadedByMsgId(String fromUserId, String toUserId, LocalDateTime date);
 }

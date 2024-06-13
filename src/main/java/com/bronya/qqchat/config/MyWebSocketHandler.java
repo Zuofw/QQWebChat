@@ -2,8 +2,6 @@ package com.bronya.qqchat.config;
 
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTUtil;
-import cn.hutool.log.Log;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bronya.qqchat.constant.RedisConstants;
 import com.bronya.qqchat.domain.bo.LoginUser;
 import com.bronya.qqchat.domain.entity.Message;
@@ -12,22 +10,17 @@ import com.bronya.qqchat.service.MessageService;
 import com.bronya.qqchat.service.TokenService;
 import com.bronya.qqchat.service.UserService;
 import com.bronya.qqchat.util.RedisCache;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.springframework.web.socket.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -93,7 +86,8 @@ public class MyWebSocketHandler implements WebSocketHandler {
             } else {
                 log.info("检测是否有新消息");
                 String userId = loginUser.getUserId();
-                List<Message> byUserId = messageService.getByUserId(userId);
+                List<Message> byUserId = messageService.getByTo(userId);
+                log.info("这是我查出来的消息{}",byUserId);
                 for (Message message : byUserId) {
                     message.setIsSend(1);
                     MessageVO messageVO = MessageVO.builder()
@@ -150,8 +144,8 @@ public class MyWebSocketHandler implements WebSocketHandler {
                 LoginUser loginUser = redisCache.getCache(RedisConstants.USER_LOGIN_KEY + uuid);
                 session.getAttributes().putIfAbsent("loginUser",loginUser);
                 sessions.putIfAbsent(loginUser.getUserId(),session);
-                Long cnt = 0L;
-                log.info("用户已经只走token{}次",++cnt);
+//                Long cnt = 0L;
+//                log.info("用户已经只走token{}次",++cnt);
 
             } else {
 
@@ -161,10 +155,10 @@ public class MyWebSocketHandler implements WebSocketHandler {
 //            msg.setToken(token);
                 // 将payload中的content字段（一个LinkedHashMap对象）转换为JsonNode对象
                 //不要转义字符
-                msg.setContent((String) payload.get("content"   ));
+                msg.setContent((String) payload.get("content"));
                 msg.setImage((String) payload.get("image"));
 //        msg.setFrom((String) payload.get("from"));
-                msg.setFrom(((LoginUser) session.getAttributes().get("loginUser")).getUserId());
+                msg.setFrom((String) payload.get("id"));
                 msg.setTarget((String) payload.get("target"));
                 msg.setDate(LocalDateTime.parse((String) payload.get("date"), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
@@ -207,7 +201,7 @@ public class MyWebSocketHandler implements WebSocketHandler {
                 // 将整个Message对象转换为JSON字符串
                 String payload = objectMapper.writeValueAsString(messageVO);
                 TextMessage textMessage = new TextMessage(payload);
-                log.info("发送消息：{}",textMessage);
+                log.info("发送消息：{}",messageVO);
                 session.sendMessage(textMessage);
                 return true;
             } catch (Exception e) {

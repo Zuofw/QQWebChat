@@ -6,5 +6,5 @@ import com.bronya.qqchat.domain.entity.Message;
 import java.util.List;
 
 public interface MessageService extends IService<Message> {
-    List<Message> getByUserId(String userId);
+    List<Message> getByTo(String userId);
 }

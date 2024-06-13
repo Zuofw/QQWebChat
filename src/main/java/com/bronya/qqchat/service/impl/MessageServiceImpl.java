@@ -23,7 +23,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     @Resource
     private MessageMapper messageMapper;
     @Override
-    public List<Message> getByUserId(String userId) {
-        return messageMapper.getByUserId(userId);
+    public List<Message> getByTo(String userId) {
+        return messageMapper.getByTo(userId);
     }
 }

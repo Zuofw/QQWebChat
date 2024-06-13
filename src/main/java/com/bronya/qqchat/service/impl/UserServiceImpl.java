@@ -13,6 +13,7 @@ import com.bronya.qqchat.domain.vo.FriendVO;
 import com.bronya.qqchat.domain.vo.MessageVO;
 import com.bronya.qqchat.domain.vo.UserInfo;
 import com.bronya.qqchat.mapper.FriendMapper;
+import com.bronya.qqchat.mapper.MessageMapper;
 import com.bronya.qqchat.mapper.UserMapper;
 import com.bronya.qqchat.service.TokenService;
 import com.bronya.qqchat.service.UserService;
@@ -34,6 +35,8 @@ import java.util.*;
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements UserService {
+    @Resource
+    private MessageMapper messageMapper;
     @Resource
     private ResourceLoader resourceLoader;
     @Resource
@@ -128,7 +131,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         String  fromUserId = SecurityUtils.getUserId();
         //获取按时间顺序的后十条消息
         Page<Message> page = new Page<>(1, 10);
-        Page<Message> messagePage = userMapper.getMessageById(page, fromUserId, toUserId);
+        Page<Message> messagePage = messageMapper.getMessageById(page, fromUserId, toUserId);
         List<Message> records = messagePage.getRecords();
         List<MessageVO> messageVOS = new ArrayList<>();
         for (Message record : records) {
@@ -156,7 +159,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         LocalDateTime date = message.getDate();
         log.info("fromUserId: {}, toUserId: {}, date: {}", fromUserId, toUserId, date);
         // 把所有这个时间之前的消息都设置为已读
-        userMapper.updateMessageReadedByMsgId(fromUserId, toUserId, date);
+        messageMapper.updateMessageReadedByMsgId(fromUserId, toUserId, date);
     }
 
 
