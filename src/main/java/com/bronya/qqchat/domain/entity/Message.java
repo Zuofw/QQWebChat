@@ -30,9 +30,9 @@ public class Message implements Serializable {
     @TableField(value = "from_user_id")
     public String from;
     @TableField(value = "to_user_id")
-    public String to;
+    public String target;
     @TableField(value = "content")
-    public JsonNode content;
+    public String content;
     @TableField(value = "image")
     public String image;
     @TableField(value = "readed")

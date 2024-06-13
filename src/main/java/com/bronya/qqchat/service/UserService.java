@@ -7,6 +7,7 @@ import com.bronya.qqchat.domain.dto.UserInfoRequest;
 import com.bronya.qqchat.domain.entity.Message;
 import com.bronya.qqchat.domain.entity.User;
 import com.bronya.qqchat.domain.vo.FriendVO;
+import com.bronya.qqchat.domain.vo.MessageVO;
 import com.bronya.qqchat.domain.vo.UserInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,7 +26,7 @@ public interface UserService extends IService<User> {
 
     List<FriendVO> getFriendList();
 
-    Page<Message> getMessageById(String toUserId);
+    Page<MessageVO> getMessageById(String toUserId);
 
     void updateMessageReadedByMsgId(Message message);
 

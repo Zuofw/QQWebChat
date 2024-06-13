@@ -2,4 +2,4 @@ spring:
   application:
     name: QQChat
   profiles:
-    active: prod
+    active: dev

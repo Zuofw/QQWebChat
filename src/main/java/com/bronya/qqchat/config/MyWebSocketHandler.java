@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bronya.qqchat.constant.RedisConstants;
 import com.bronya.qqchat.domain.bo.LoginUser;
 import com.bronya.qqchat.domain.entity.Message;
+import com.bronya.qqchat.domain.vo.MessageVO;
 import com.bronya.qqchat.service.MessageService;
 import com.bronya.qqchat.service.TokenService;
 import com.bronya.qqchat.service.UserService;
@@ -83,7 +84,7 @@ public class MyWebSocketHandler implements WebSocketHandler {
                 }
             }
 
-        }, 0, 30, TimeUnit.SECONDS); // 10秒后开始执行，每隔10秒执行一次
+        }, 0, 60, TimeUnit.SECONDS); // 10秒后开始执行，每隔10秒执行一次
 
         executorService.scheduleAtFixedRate(()->{
             LoginUser loginUser = (LoginUser) session.getAttributes().get("loginUser");
@@ -95,7 +96,15 @@ public class MyWebSocketHandler implements WebSocketHandler {
                 List<Message> byUserId = messageService.getByUserId(userId);
                 for (Message message : byUserId) {
                     message.setIsSend(1);
-                    sendMessageToUser(userId,message);
+                    MessageVO messageVO = MessageVO.builder()
+                            .id(message.getFrom())
+                            .date(message.getDate())
+                            .content(message.getContent())
+                            .image(message.getImage())
+                            .target(message.getTarget())
+                            .check(message.getReaded() == 1)
+                            .build();
+                    sendMessageToUser(userId,messageVO);
                     messageService.updateById(message);
                 }
                 log.info("发送未读消息完成");
@@ -141,6 +150,8 @@ public class MyWebSocketHandler implements WebSocketHandler {
                 LoginUser loginUser = redisCache.getCache(RedisConstants.USER_LOGIN_KEY + uuid);
                 session.getAttributes().putIfAbsent("loginUser",loginUser);
                 sessions.putIfAbsent(loginUser.getUserId(),session);
+                Long cnt = 0L;
+                log.info("用户已经只走token{}次",++cnt);
 
             } else {
 
@@ -149,15 +160,24 @@ public class MyWebSocketHandler implements WebSocketHandler {
                 msg.setIsSend(0);
 //            msg.setToken(token);
                 // 将payload中的content字段（一个LinkedHashMap对象）转换为JsonNode对象
-                msg.setContent(objectMapper.convertValue(payload.get("content"), JsonNode.class));
+                //不要转义字符
+                msg.setContent((String) payload.get("content"   ));
                 msg.setImage((String) payload.get("image"));
 //        msg.setFrom((String) payload.get("from"));
                 msg.setFrom(((LoginUser) session.getAttributes().get("loginUser")).getUserId());
-                msg.setTo((String) payload.get("to"));
+                msg.setTarget((String) payload.get("target"));
                 msg.setDate(LocalDateTime.parse((String) payload.get("date"), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
+                MessageVO messageVO = MessageVO.builder()
+                        .id(msg.getFrom())
+                        .date(msg.getDate())
+                        .content(msg.getContent())
+                        .image(msg.getImage())
+                        .target(msg.getTarget())
+                        .check(false)
+                        .build();
                 log.info("接收到消息：{}",msg);
-                if( sendMessageToUser(msg.getTo(),msg)) {
+                if( sendMessageToUser(msg.getTarget(),messageVO)) {
                     msg.setIsSend(1);
                 }
                 messageService.save(msg); // 保存Message对象到数据库
@@ -176,7 +196,7 @@ public class MyWebSocketHandler implements WebSocketHandler {
 
     }
 
-    private boolean sendMessageToUser(String userId, Message message) {
+    private boolean sendMessageToUser(String userId, MessageVO messageVO) {
         WebSocketSession session = sessions.get(userId);
         if(session != null && session.isOpen()) {
             try {
@@ -185,14 +205,16 @@ public class MyWebSocketHandler implements WebSocketHandler {
                 //删除 token 字段
 //                message.setToken(null);
                 // 将整个Message对象转换为JSON字符串
-                String payload = objectMapper.writeValueAsString(message);
+                String payload = objectMapper.writeValueAsString(messageVO);
                 TextMessage textMessage = new TextMessage(payload);
-                log.info("发送消息：{}",textMessage.getPayload());
+                log.info("发送消息：{}",textMessage);
                 session.sendMessage(textMessage);
                 return true;
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        } else {
+            log.info("用户{}不在线",userId);
         }
         return false;
     }
@@ -222,6 +244,13 @@ public class MyWebSocketHandler implements WebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
         // 其他代码...
+        //如果用户主动退出，移除用户的session信息
+        log.info("用户{}已经退出",session.getAttributes().get("loginUser"));
+        LoginUser loginUser = (LoginUser) session.getAttributes().get("loginUser");
+        if(loginUser != null) {
+            redisCache.deleteCache(RedisConstants.USER_ACTIVE + loginUser.getUserId());
+            sessions.remove(loginUser.getUserId());
+        }
 
         // 在连接关闭时停止定时任务
         ScheduledExecutorService executorService = (ScheduledExecutorService) session.getAttributes().get("executorService");

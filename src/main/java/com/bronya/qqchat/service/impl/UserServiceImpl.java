@@ -10,6 +10,7 @@ import com.bronya.qqchat.domain.entity.Friend;
 import com.bronya.qqchat.domain.entity.Message;
 import com.bronya.qqchat.domain.entity.User;
 import com.bronya.qqchat.domain.vo.FriendVO;
+import com.bronya.qqchat.domain.vo.MessageVO;
 import com.bronya.qqchat.domain.vo.UserInfo;
 import com.bronya.qqchat.mapper.FriendMapper;
 import com.bronya.qqchat.mapper.UserMapper;
@@ -123,17 +124,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     }
 
     @Override
-    public Page<Message> getMessageById(String toUserId) {
+    public Page<MessageVO> getMessageById(String toUserId) {
         String  fromUserId = SecurityUtils.getUserId();
         //获取按时间顺序的后十条消息
         Page<Message> page = new Page<>(1, 10);
-        return userMapper.getMessageById(page, fromUserId, toUserId);
+        Page<Message> messagePage = userMapper.getMessageById(page, fromUserId, toUserId);
+        List<Message> records = messagePage.getRecords();
+        List<MessageVO> messageVOS = new ArrayList<>();
+        for (Message record : records) {
+            MessageVO messageVO = MessageVO.builder()
+                    .id(record.getId().toString())
+                    .date(record.getDate())
+                    .target(record.getTarget())
+                    .content(record.getContent())
+                    .image(record.getImage())
+                    .check(record.getReaded() == 1)
+                    .build();
+            messageVOS.add(messageVO);
+        }
+        Page<MessageVO> messageVOPage = new Page<>();
+        messageVOPage.setRecords(messageVOS);
+        messageVOPage.setTotal(messagePage.getTotal());
+        return messageVOPage;
+
     }
 
     @Override
     public void updateMessageReadedByMsgId(Message message) {
         String fromUserId = SecurityUtils.getUserId();
-        String toUserId = message.getTo();
+        String toUserId = message.getTarget();
         LocalDateTime date = message.getDate();
         log.info("fromUserId: {}, toUserId: {}, date: {}", fromUserId, toUserId, date);
         // 把所有这个时间之前的消息都设置为已读

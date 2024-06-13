@@ -7,7 +7,7 @@
     <resultMap id="MessageResultMap" type="com.bronya.qqchat.domain.entity.Message">
         <id property="id" column="id" />
         <result property="from" column="from_user_id" javaType="java.lang.String" jdbcType="VARCHAR" />
-        <result property="to" column="to_user_id" javaType="java.lang.String" jdbcType="VARCHAR" />
+        <result property="target" column="to_user_id" javaType="java.lang.String" jdbcType="VARCHAR" />
         <!-- Map other fields as needed -->
     </resultMap>
 
